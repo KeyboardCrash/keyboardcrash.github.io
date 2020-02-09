@@ -9,6 +9,16 @@
     font-size: 36px;
 }
 
+#history {
+    width: 600px;
+    height: 40px;
+    padding-right: 20px;
+    border: 1px solid black;
+    background-color: darkgrey;
+    text-align: right;
+    font-size: 20px;
+}
+
 #calculator {
     margin-top: 50px;
     width: 600px;

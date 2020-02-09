@@ -13,6 +13,7 @@ $(document).on("click", "#math", function() {
     let x = $('#calculator #display').html();
     try {
         $('#calculator #display').html(eval(x));
+        $('#calculator #history').html(x);
 
     } catch {
         $('#calculator #display').html("ERROR");
