@@ -5,7 +5,7 @@ $(document).on("click", ".btn", function() {
     if (x === "ERROR") {
         $('#calculator #display').html(y);
     } else {
-        if (x.length >= 20) {
+        if (x.length >= 15) {
             $('#calculator #display').html(x.slice(1, x.length) + y);
 
         } else {
