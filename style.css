@@ -46,6 +46,16 @@
 }
 
 
+@media only screen and (max-width: 600px) {
+    #calculator {
+        width: 100%;
+        max-width: inherit;
+    }
+    #calculator tr, #calculator td {
+        max-width: inherit;
+    }
+}
+
 @media only screen and (min-width: 600px) {
     #calculator {
         width: 600px;
