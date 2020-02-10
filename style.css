@@ -7,6 +7,7 @@
     background-color: darkgrey;
     text-align: right;
     font-size: 36px;
+    height: 100px;
 }
 
 #history {
@@ -31,15 +32,11 @@
 #calculator tr, #calculator td {
     background-color: lightgrey;
     border: 2px solid black;
-    width: 25%;
+    width: 150px;
 }
 
 #calculator button {
     font-size: 24px;
-}
-
-#calculator #display {
-    height: 100px;
 }
 
 .btn, .execute {

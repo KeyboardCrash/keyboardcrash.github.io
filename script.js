@@ -5,7 +5,12 @@ $(document).on("click", ".btn", function() {
     if (x === "ERROR") {
         $('#calculator #display').html(y);
     } else {
-        $('#calculator #display').html($('#calculator #display').html() + y);
+        if (x.length >= 20) {
+            $('#calculator #display').html(x.slice(1, x.length) + y);
+
+        } else {
+            $('#calculator #display').html($('#calculator #display').html() + y);
+        }
     }
 })
 
