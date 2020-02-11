@@ -46,6 +46,19 @@
     margin: 0;
 }
 
+input, textarea {
+    -webkit-appearance: none;
+    border-radius: 0;
+  }
+
+.color {
+    background-color: rgb(140, 146, 172);
+}
+
+body {
+    background-color: #ecf7fc;
+}
+
 
 @media only screen and (max-width: 600px) {
     #calculator {
