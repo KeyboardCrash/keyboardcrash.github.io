@@ -1,4 +1,3 @@
-/* Set the properties for the calculation display */
 #display {
     padding-top: 100px;
     padding-bottom: 100px;
@@ -11,7 +10,6 @@
     width: 100%;
 }
 
-/* Set the properties for the history cell */
 #history {
     height: 40px;
     padding-right: 20px;
@@ -22,8 +20,6 @@
     font-size: 20px;
 }
 
-
-/* Set table size and style */
 #calculator {
     max-width: 600px;
     margin-top: 50px;
@@ -33,28 +29,30 @@
     border-collapse: collapse;
 }
 
-/* Calculator based on table - set sizes based on 600px width */
 #calculator tr, #calculator td {
     background-color: lightgrey;
     border: 2px solid black;
     width: 150px;
 }
 
-/* Set the calculator font and button size */
 #calculator button {
     font-size: 24px;
     min-width: 75px;
 }
 
-/* Set button properties */
 .btn, .execute {
     width: 100%;
     height: 100%;
     padding: 0;
     margin: 0;
-    border-radius: 0;
-    -webkit-appearance:none;
-    border-radius: 0;
+}
+
+/* Set all buttons to not be circular in mobile */
+button {
+    font-size: 100%;
+    font-family: inherit;
+    border: 0;
+    padding: 0;
 }
 
 /* Mobile breaks without this - take online source */
@@ -62,8 +60,7 @@ button,
 [type="button"],
 [type="reset"],
 [type="submit"] {
-    -webkit-appearance:none;
-    border-radius: 0;
+  -webkit-appearance: button;
 }
 
 /* Button colors for some buttons */
