@@ -60,6 +60,7 @@ button,
 [type="reset"],
 [type="submit"] {
   -webkit-appearance: button;
+  border-radius: 0;
 }
 
 /* Button colors for some buttons */
