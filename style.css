@@ -62,6 +62,7 @@ button,
 [type="submit"] {
   -webkit-appearance: button;
   border-radius: 0;
+  -webkit-border-radius:0px;
 }
 
 /* Button colors for some buttons */
