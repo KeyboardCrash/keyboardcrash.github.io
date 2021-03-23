@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]>      <html class="no-js"> <!--<![endif]-->
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title></title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="">
+    <script src="https://d3js.org/d3.v6.js"></script>
+    <link rel="stylesheet" href="style.css">
+
+
+</head>
+
+<body>
+    <!--[if lt IE 7]>
+            <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="#">upgrade your browser</a> to improve your experience.</p>
+        <![endif]-->
+    <h2 id="title">Cumulative cost per kilometer of projects</h2>
+    <select id="selectButton"></select>
+    <div id="svg-container">
+    </div>
+
+</body>
+
+<script>
+    Promise.all([
+        d3.csv("transitdata.csv"),
+    ]).then(showData);
+
+    // Get the data
+    function showData(dataSources) {
+        // set the dimensions and margins of the graph
+        var margin = {
+                top: 20,
+                right: 75,
+                bottom: 30,
+                left: 75
+            },
+            width = 1360 - margin.left - margin.right,
+            height = 760 - margin.top - margin.bottom;
+
+        // append the svg object to the body of the page
+        // appends a 'group' element to 'svg'
+        // moves the 'group' element to the top left margin
+        var svg = d3.select("#svg-container").append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform",
+                "translate(" + margin.left + "," + margin.top + ")");
+        var data = dataSources[0];
+
+        console.log("Data has loaded")
+        console.log(data)
+
+        // Build the selector
+        function onlyUnique(value, index, self) {
+            return self.indexOf(value) === index;
+        }
+        var allGroup = d3.map(data, function (d) {
+            return d.city
+        })
+        // Unique keys
+        var keys = allGroup.filter(onlyUnique);
+
+        // default select
+        let selection = keys[0]
+
+        // console.log(keys)
+        // add the options to the button
+        d3.select("#selectButton")
+            .selectAll('myOptions')
+            .data(keys)
+            .enter()
+            .append('option')
+            .attr("id", "dropdown")
+            .text(function (d) {
+                return d;
+            }) // text showed in the menu
+            .attr("value", function (d) {
+                return d;
+            }) // corresponding value returned by the button
+
+        var myColor = d3.scaleOrdinal()
+            .domain(keys)
+            .range(d3.schemeSet2);
+
+        function updateLine(selection) {
+            d3.selectAll(".pin").style("opacity", 0)
+
+            d3.selectAll(".pin."+selection).style("opacity", 1)
+
+            d3.selectAll(".line")
+                .style("opacity", 0.2)
+
+            d3.selectAll(".line." + selection)
+                .style("opacity", 1)
+
+            d3.selectAll(".line").style("stroke-width", 2)
+
+            d3.selectAll(".line." + selection).style("stroke-width", 4)
+        }
+
+        d3.select("#selectButton")
+            .style("left", "500px")
+            .style("top", "50px")
+            .style("position", "absolute")
+            .style("display", "block")
+            .on("change", function (d) {
+
+                let index = d.target.options.selectedIndex;
+                selection = keys[index];
+                // console.log(selection)
+
+                // console.log("This is the data we have for your selection")
+                // console.log(projectByCity[selection])
+
+                updateLine(selection);
+
+            })
+
+
+
+        // set the ranges
+        var x = d3.scaleTime().range([0, width]);
+        var y = d3.scaleLinear().range([height, 0]);
+
+        // define the 1st line
+        var valueline = d3.line()
+            .curve(d3.curveMonotoneY)
+            .x(function (d) {
+                return x(d.year)
+            })
+            .y(function (d) {
+                return y(d.costperkm_year)
+            })
+        // .curve(d3.curveBumpX)
+        // .x(function(d) { 
+        //     return x(d.year)
+        // })
+        // .y(function(d) { 
+        //     return y(d.cost_year)
+        // })
+
+
+        // define the 2nd line
+        // var valueline2 = d3.line()
+        //     .x(function(d) { return x(d.year)})
+        //     .y(function(d) { return y(d.real_cost)})
+        //     // .x(function(d) { return x(d.date); })
+        //     // .y(function(d) { return y(d.open); });
+
+        function sortByYearAscending(a, b) {
+            // Dates will be cast to numbers automagically:
+            return a.start_year - b.start_year;
+        }
+
+        // format the data
+        data.forEach(function (d) {
+            // d.date = parseTime(d.date);
+            // d.close = +d.close;
+            // d.open = +d.open;
+            d.year = +d.year
+            d.start_year = +d.start_year
+            d.end_year = +d.end_year
+            d.finish_year = +d.year
+            d.cost = +d.cost
+            d.real_cost = +d.real_cost
+            d.stations = +d.stations
+            d.cost_km_millions = +d.cost_km_millions
+            d.city = d.city
+            d.line = d.line
+        });
+
+        data = data.sort(sortByYearAscending);
+        //console.log(data)
+
+
+        // ===== Calculate the cost of a project per year (cost/total years)
+        // calculate the cost per year for the project
+        for (let ind in data) {
+            // console.log(data[ind])
+
+            // ignore the last column
+            if ("columns".includes(ind)) {
+                continue;
+            }
+            let obj = data[ind];
+            // console.log("Obj is:");
+            // console.log(obj)
+            let amtOfYear = obj.end_year - obj.start_year;
+
+            let cost = obj.cost;
+
+            let cost_per_year = cost / amtOfYear;
+            if (!isNaN(cost_per_year)) {
+                // console.log(`cost per year is ${cost_per_year}`);
+
+                data[ind]["cost_per_year"] = cost_per_year;
+            } else {
+                data[ind]["cost_per_year"] = NaN;
+            }
+        }
+
+        // ====== do data calculation here that will be graphed ======
+        // ===== Calculate the total cost/km per year of every city
+        //console.log(data)
+        var yearlyCost = {}
+        for (let ind in data) {
+
+            let obj = data[ind];
+            // console.log(yearlyCost)
+            // console.log(obj.city)
+            // console.log(obj.cost_per_year)
+
+            if (yearlyCost[obj.city] === undefined) {
+                yearlyCost[obj.city] = {}
+            }
+
+            if (!isNaN(obj.cost_km_millions)) {
+                for (let i = obj.start_year; i <= obj.end_year; i++) {
+                    if (yearlyCost[obj.city][i] === undefined) {
+                        yearlyCost[obj.city][i] = {};
+                    }
+                    yearlyCost[obj.city][i][obj.line] = obj.cost_km_millions;
+
+                    if (yearlyCost[obj.city][i]['cumulative'] === undefined) {
+                        yearlyCost[obj.city][i]['cumulative'] = 0;
+                    }
+                    // console.log(`Set city ${obj.city} year ${i} cost/y ${obj.cost_per_year}`)
+                    yearlyCost[obj.city][i]['cumulative'] += obj.cost_km_millions
+                }
+            }
+
+        }
+        console.log("yearly cost:")
+        console.log(yearlyCost)
+
+
+        // ===== adjust range of the graph just incase =====
+
+        // find the max val to set the range of the graph
+        var maxYearlyCost = 0;
+        for (city in yearlyCost) {
+            if (city !== undefined) {
+                buildYearCost(city)
+            }
+        }
+
+        // calculate the cumulative cost per year of projects in each city
+        // arr = {beijing: {2011: val, 2012: val2, 2013: val3}, guangzhou: {...}}
+        function buildYearCost(city_requested) {
+
+            var year_to_yearlyCost = []
+            // build array
+            for (let year in yearlyCost[city_requested]) {
+                // console.log(year)
+                let build = {
+                    "year": year,
+                    "costperkm_year": yearlyCost[city_requested][year]['cumulative'],
+                    "lines": yearlyCost[city_requested][year],
+                    "city": city_requested
+                }
+                year_to_yearlyCost.push(build)
+                // console.log(build)
+            }
+            let value = Math.max.apply(Math, year_to_yearlyCost.map(function (o) {
+                return o.costperkm_year;
+            }));
+            if (value > maxYearlyCost) {
+                maxYearlyCost = value;
+            }
+
+            console.log(year_to_yearlyCost)
+            return year_to_yearlyCost
+        }
+
+
+        // Scale the range of the data
+        x.domain([d3.min(data, function (d) {
+            return Math.min(d.start_year)
+        }), d3.max(data, function (d) {
+            return Math.max(d.end_year)
+        })]);
+        // Modify this max if needed
+        y.domain([0, d3.max(data, function (d) {
+            return Math.max(d.cost_km_millions, maxYearlyCost);
+        })]);
+
+        function buildPath(city_name) {
+            const cityEnum = {
+                "Beijing": "red",
+                "Shenzhen": "blue",
+                "Guangzhou": "black",
+                "Shanghai": "green",
+                "Wuhan": "orange"
+            }
+            // Add the valueline path.
+            var city_path = svg.append("path")
+                .data([buildYearCost(city_name)])
+                .attr("class", "line " + city_name)
+                .style("stroke", cityEnum[city_name])
+                .attr("d", valueline)
+
+
+            // Variable to Hold Total Length
+            var totalLength = city_path.node().getTotalLength();
+            // Set Properties of Dash Array and Dash Offset and initiate Transition
+            city_path
+                .attr("stroke-dasharray", totalLength + " " + totalLength)
+                .attr("stroke-dashoffset", totalLength)
+                .transition() // Call Transition Method
+                .duration(5000) // Set Duration timing (ms)
+                .ease(d3.easeLinear) // Set Easing option
+                .attr("stroke-dashoffset", 0) // Set final value of dash-offset for transition
+        }
+
+        buildPath("Beijing");
+
+        buildPath("Shenzhen");
+
+        buildPath("Guangzhou");
+
+        buildPath("Shanghai");
+
+        buildPath("Wuhan");
+
+        // Add the X Axis
+        svg.append("g")
+            .attr("transform", "translate(0," + height + ")")
+            .call(
+                d3.axisBottom(x)
+                .tickFormat(d3.format("d"))
+            );
+
+        // Add the Y Axis
+        svg.append("g")
+            .call(
+                d3.axisLeft(y)
+                .tickFormat(d3.format("d"))
+            );
+
+        // create a tooltip
+        var Tooltip = d3.select("body")
+            .append("div")
+            .style("opacity", 1)
+            .attr("class", "tooltip")
+            .style("background-color", "white")
+            .style("border", "solid")
+            .style("border-width", "2px")
+            .style("border-radius", "5px")
+            .style("padding", "5px")
+            .style("position", "absolute")
+
+        var mouseover = function (d) {
+            console.log("moused over")
+            console.log(d)
+            let city_name = this.classList[1];
+
+            //console.log(".line."+city_name)
+
+            Tooltip
+                //.style("opacity", 1)
+                .attr("display", "block !important")
+                .style("opacity", 1)
+
+        }
+
+        var mousemove = function (d) {
+            console.log("mouse moving")
+
+            console.log(d.path[0].__data__)
+            let obj = d.path[0].__data__;
+
+            let city_name = obj.city;
+            let year = obj.year;
+            let costperkm_year = obj.costperkm_year;
+
+            let lines = obj.lines;
+            console.log(lines);
+
+            let markup = "";
+            for (line in lines) {
+                if (line.includes("cumulative")) {
+                    continue;
+                }
+                console.log(line)
+                let builder = `${line} : ¥${Math.ceil(lines[line])}mm<br>`
+                markup += builder;
+            }
+
+
+            Tooltip
+                .html("Cumulative Cost/km in a Year of Projects in " +
+                    city_name + "<br>" +
+                    "Year: " + year + "<br>Total: ¥" + Math.ceil(costperkm_year) + "mm<br>" +
+                    markup
+                )
+                .style("left", (d3.pointer(event)[0] - 50) + "px")
+                .style("top", (d3.pointer(event)[1] + 100) + "px")
+        }
+
+        var mouseleave = function (d) {
+            console.log("mouse left")
+            console.log(d)
+            let city_name = this.classList[1]
+            // console.log(".line."+city_name)
+
+            // d3.selectAll(".line."+city_name).style("stroke-width", 2);
+
+            Tooltip
+                .attr("display", "none !important")
+                .style("opacity", 0)
+            //.style("display", 0)
+            // d3.select(this)
+            // .style("stroke", "none")
+            // .style("opacity", 0.8)
+        }
+
+
+
+        // ===== Dots on path =====
+        // Add the scatterplot
+        // Add the scatterplot
+
+        function plotPoints(city_name) {
+            let citypoints = svg.selectAll("dot")
+                .data(buildYearCost(city_name))
+                .enter().append("circle")
+                .attr("r", 3)
+                .attr("cx", function (d) {
+                    return x(d.year);
+                })
+                .attr("cy", function (d) {
+                    return y(d.costperkm_year);
+                })
+                .attr("id", "circleCustomTooltip")
+                .on("mouseover", mouseover)
+                .on("mousemove", mousemove)
+                .on("mouseleave", mouseleave)
+
+            citypoints.attr("class", "pin " + city_name);
+
+            // citypoints.each(function(d) {
+            //     this.classList.add("year_" + d.year);
+            // })
+            // citypoints.each(function(d) {
+            //     this.classList.add("costyear_" + d.cost_year);
+            // })
+        }
+
+
+        plotPoints("Beijing");
+
+        plotPoints("Shenzhen");
+
+        plotPoints("Guangzhou");
+
+        plotPoints("Shanghai");
+
+        plotPoints("Wuhan");
+
+
+        d3.selectAll(".pin").style("opacity", 0);
+        d3.selectAll(".pin."+selection).style("opacity", 1);
+
+        d3.selectAll(".line")
+            .style("opacity", 0.2)
+
+        d3.selectAll(".line." + selection)
+            .style("opacity", 1)
+
+        d3.selectAll(".line." + selection).style("stroke-width", 4)
+
+
+        // console.log(beijing)
+        // let group = beijing._groups[0];
+        // console.log(group)
+        // let lastchild = group[group.length - 1]
+        // console.log(lastchild)
+
+        // Append text to the end of the graph - hardcoded because I don't have time to figure out why cx doesnt work
+
+        svg.append("text")
+            .attr("x", 1080.357142857143 + 30)
+            .attr("y", 587.6134933369203)
+            .attr("dy", ".35em")
+            .attr("text-anchor", "middle")
+            .style("fill", "red")
+            .style("position", "absolute")
+            .style("font-weight", "bold")
+            .style("stroke", "black")
+            .style("stroke-width", ".5")
+            .style("pointer-events", "none")
+            .text("Beijing");
+
+        svg.append("text")
+            .attr("x", 1210 + 40)
+            .attr("y", 649.87432864788)
+            .attr("dy", ".35em")
+            .attr("text-anchor", "middle")
+            .style("fill", "blue")
+            .style("position", "absolute")
+            .style("font-weight", "bold")
+            .style("stroke", "black")
+            .style("stroke-width", ".5")
+            .style("pointer-events", "none")
+            .text("Shenzhen");
+
+        svg.append("text")
+            .attr("x", 1210 + 40)
+            .attr("y", 672.110503678225)
+            .attr("dy", ".35em")
+            .attr("text-anchor", "middle")
+            .style("fill", "green")
+            .style("position", "absolute")
+            .style("font-weight", "bold")
+            .style("stroke", "black")
+            .style("stroke-width", ".5")
+            .style("pointer-events", "none")
+            .text("Shanghai");
+
+        svg.append("text")
+            .attr("x", 1123.5714285714287 - 45)
+            .attr("y", 659.2381254343572 - 5)
+            .attr("dy", ".35em")
+            .attr("text-anchor", "middle")
+            .style("fill", "black")
+            .style("position", "absolute")
+            .style("font-weight", "bold")
+            .style("stroke", "black")
+            .style("stroke-width", ".5")
+            .style("pointer-events", "none")
+            .text("Guangzhou");
+
+        svg.append("text")
+            .attr("x", 1166.7857142857142 + 30)
+            .attr("y", 657.2780494678824)
+            .attr("dy", ".35em")
+            .attr("text-anchor", "middle")
+            .style("fill", "orange")
+            .style("position", "absolute")
+            .style("font-weight", "bold")
+            .style("stroke", "black")
+            .style("stroke-width", ".5")
+            .style("pointer-events", "none")
+            .text("Wuhan");
+
+    }
+</script>
+
+</html>

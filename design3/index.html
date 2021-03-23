@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]>      <html class="no-js"> <!--<![endif]-->
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title></title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="">
+    <script src="https://d3js.org/d3.v6.js"></script>
+    <link rel="stylesheet" href="style.css">
+
+
+</head>
+
+<body>
+    <!--[if lt IE 7]>
+            <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="#">upgrade your browser</a> to improve your experience.</p>
+        <![endif]-->
+    <h2 id="title">Projected vs Real cost of transit project</h2>
+    <select id="selectButton"></select>
+    <div id="svg-container">
+    </div>
+
+</body>
+
+<script>
+    Promise.all([
+        d3.csv("transitdata.csv"),
+    ]).then(showData);
+
+    // Get the data
+    function showData(dataSources) {
+        // set the dimensions and margins of the graph
+        var margin = {
+                top: 20,
+                right: 75,
+                bottom: 250,
+                left: 75
+            },
+            width = 1360 - margin.left - margin.right,
+            height = 760 - margin.top - margin.bottom;
+
+        // append the svg object to the body of the page
+        // appends a 'group' element to 'svg'
+        // moves the 'group' element to the top left margin
+        var svg = d3.select("#svg-container").append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform",
+                "translate(" + margin.left + "," + margin.top + ")");
+        var data = dataSources[0];
+
+        console.log("Data has loaded")
+        console.log(data)
+
+        // Build the selector
+        function onlyUnique(value, index, self) {
+            return self.indexOf(value) === index;
+        }
+        var allGroup = d3.map(data, function (d) {
+            return d.city
+        })
+        // Unique keys
+        var keys = allGroup.filter(onlyUnique);
+
+        // default select
+        let selection = keys[0]
+
+        // console.log(keys)
+        // add the options to the button
+        d3.select("#selectButton")
+            .selectAll('myOptions')
+            .data(keys)
+            .enter()
+            .append('option')
+            .attr("id", "dropdown")
+            .text(function (d) {
+                return d;
+            }) // text showed in the menu
+            .attr("value", function (d) {
+                return d;
+            }) // corresponding value returned by the button
+
+        var myColor = d3.scaleOrdinal()
+            .domain(keys)
+            .range(d3.schemeSet2);
+
+        d3.select("#selectButton")
+            .style("left", "500px")
+            .style("top", "50px")
+            .style("position", "absolute")
+            .style("display", "block")
+            .on("change", function (d) {
+                let index = d.target.options.selectedIndex
+                selection = keys[index]
+                // console.log(selection)
+
+                // console.log("This is the data we have for your selection")
+                // console.log(projectByCity[selection])
+
+
+                // need to filter for the data of a specific city, then pick and show it
+                x.domain(projectByCity[selection].map(function (d) {
+                    return d.line
+                }));
+
+                y.domain([0, d3.max(projectByCity[selection], function (d) {
+                    return d.cost;
+                })]);
+
+                d3.selectAll(".y.axis")
+                    .transition()
+                    .call(d3.axisLeft(y))
+                
+
+                d3.selectAll(".x.axis")
+                    .transition()
+                    .call(d3.axisBottom(x))
+                    .selectAll("text")
+                    .style("text-anchor", "end")
+                    .attr("dx", "-.8em")
+                    .attr("dy", ".15em")
+                    .attr("transform", "rotate(-65)");
+
+                svg.selectAll("rect").remove();
+
+                drawBars(projectByCity[selection]);
+
+            })
+
+
+        // set the ranges
+        var x = d3.scaleBand()
+            .range([0, width])
+            .padding(0.1);
+        var y = d3.scaleLinear().range([height, 0]);
+
+
+        function sortByYearAscending(a, b) {
+            // Dates will be cast to numbers automagically:
+            return a.start_year - b.start_year;
+        }
+
+        function sortByCostAscending(a, b) {
+            // Dates will be cast to numbers automagically:
+            return a.cost - b.cost;
+        }
+
+        // ===== Data Transformation =====
+        data.forEach(function (d) {
+            // d.date = parseTime(d.date);
+            // d.close = +d.close;
+            // d.open = +d.open;
+            d.year = +d.year
+            d.start_year = +d.start_year
+            d.end_year = +d.end_year
+            d.finish_year = +d.year
+            d.cost = +d.cost
+            d.real_cost = +d.real_cost
+            d.stations = +d.stations
+            d.cost_km_millions = +d.cost_km_millions
+            d.city = d.city
+            d.line = d.line
+        });
+
+        // sort the data by cost
+        data = data.sort(sortByCostAscending);
+        // console.log(data)
+
+
+        // ===== Calculate the cost of a project per year (cost/total years)
+        // calculate the cost per year for the project
+        for (let ind in data) {
+            // console.log(data[ind])
+
+            // ignore the last column
+            if ("columns".includes(ind)) {
+                continue;
+            }
+            let obj = data[ind];
+            // console.log("Obj is:");
+            // console.log(obj)
+            let amtOfYear = obj.end_year - obj.start_year;
+
+            let cost = obj.cost;
+
+            let cost_per_year = cost / amtOfYear;
+            if (!isNaN(cost_per_year)) {
+                // console.log(`cost per year is ${cost_per_year}`);
+
+                data[ind]["cost_per_year"] = cost_per_year;
+            } else {
+                data[ind]["cost_per_year"] = NaN;
+            }
+        }
+
+        // ====== do data calculation here that will be graphed ======
+        // Just a basic bar graph for now, thinking of what to do here...
+        var projectByCity = {}
+        for (let ind in data) {
+            let obj = data[ind];
+            console.log(obj.city)
+            console.log(obj.cost)
+
+            if (projectByCity[obj.city] === undefined) {
+                projectByCity[obj.city] = []
+            }
+
+            if (!isNaN(obj.cost)) {
+                // console.log(`Set city ${obj.city} year ${i} cost/y ${obj.cost_per_year}`)
+                projectByCity[obj.city].push(obj)
+            }
+
+        }
+        console.log("projects by city:")
+        console.log(projectByCity)
+
+
+        // Scale the range of the data
+        x.domain(projectByCity[selection].map(function (d) {
+            return d.line
+        }));
+        // Modify this max if needed
+        y.domain([0, d3.max(data, function (d) {
+            return d.cost;
+        })]);
+
+        function drawBars(data) {
+
+            var mouseover = function (d) {
+                console.log("moused over")
+                console.log(d)
+
+                Tooltip
+                    //.style("opacity", 1)
+                    .attr("display", "block !important")
+                    .style("opacity", 1)
+
+            }
+
+            var mousemove = function (d) {
+                console.log("mouse moving")
+                let rectdata = d3.select(this)._groups[0][0].__data__;
+                console.log(rectdata)
+                //console.log(projectByCity[selection])
+                let project_name = rectdata.line
+                let start_year = rectdata.start_year
+                let finish_year = rectdata.finish_year
+                let cost = rectdata.cost
+                let real_cost = rectdata.real_cost
+
+
+                Tooltip
+                    .html(
+                        `
+                        Project Name: ${project_name}<br>
+                        Start Year: ${start_year}<br>
+                        End Year: ${finish_year}<br>
+                        Projected Cost: ¥${Math.floor(cost)}mm<br>
+                        Actual Cost: ¥${Math.floor(real_cost)}mm<br>
+                        Amount Overestimated: ¥${Math.floor(cost - real_cost)}mm<br>
+                        Percentage of cost used: ${Math.floor(real_cost/cost * 100)}%<br>
+                        `
+                    
+                    
+                    )
+                    .style("left", (d3.pointer(event)[0] + 250) + "px")
+                    .style("top", (d3.pointer(event)[1] - 90) + "px")
+            }
+
+            var mouseleave = function (d) {
+                console.log("mouse left")
+                console.log(d)
+
+
+                Tooltip
+                    .attr("display", "none !important")
+                    .style("opacity", 0)
+            }
+
+
+            let bar_cost = svg.selectAll(".bar")
+                .data(projectByCity[selection])
+                .enter()
+                .append("rect")
+                .on("mouseover", mouseover)
+                .on("mousemove", mousemove)
+                .on("mouseleave", mouseleave)
+                .classed("cost", true)
+                .attr("fill", "#003f5c")
+                .attr("width", x.bandwidth())
+                .attr("x", function (d, i) {
+                    return x(d.line);
+                })
+                .attr("y", d => {
+                    return height
+                })
+                .attr("height", 0)
+                .transition()
+                .duration(300)
+                .delay(function (d, i) {
+                    return i * 50
+                })
+                .attr("y", d => {
+                    return y(d.cost)
+                })
+                .attr("height", d => {
+                    return height - y(d.cost);
+                })
+
+
+            let bar_realcost = svg.selectAll(".bar")
+                .data(projectByCity[selection])
+                .enter()
+                .append("rect")
+                .on("mouseover", mouseover)
+                .on("mousemove", mousemove)
+                .on("mouseleave", mouseleave)
+                .classed("real_cost", true)
+                .attr("fill", "#ff6361")
+                .attr("width", x.bandwidth())
+                .attr("x", function (d, i) {
+                    return x(d.line);
+                })
+                .attr("y", d => {
+                    return height
+                })
+                .attr("height", 0)
+                .transition()
+                .duration(300)
+                .delay(function (d, i) {
+                    return i * 50
+                })
+                .attr("y", d => {
+                    return y(d.real_cost)
+                })
+                .attr("height", d => {
+                    return height - y(d.real_cost);
+                })
+
+        }
+
+        // ===== Bars ======
+
+        // starting bar
+        // selection by default is at 0, beijing typically loaded
+        drawBars(projectByCity[selection]);
+
+
+        // Add the X Axis
+        svg.append("g")
+            .attr("class", "x axis")
+            .attr("transform", "translate(0," + height + ")")
+            .call(d3.axisBottom(x))
+            .selectAll("text")
+            .style("text-anchor", "end")
+            .attr("dx", "-.8em")
+            .attr("dy", ".15em")
+            .attr("transform", "rotate(-65)");
+
+        // Add the Y Axis
+        svg.append("g")
+            .attr("class", "y axis")
+            .call(d3.axisLeft(y));
+        
+        // text label for x axis
+        svg.append("text")             
+                .attr("transform",
+                        "translate(" + (width/2) + " ," + 
+                                    (height + margin.bottom) + ")")
+                .style("text-anchor", "middle")
+                .text("Transit Line Name");
+        
+                // text label for the y axis
+        svg.append("text")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 0 - margin.left)
+            .attr("x",0 - (height / 2))
+            .attr("dy", "1em")
+            .style("text-anchor", "middle")
+            .text("Cost in Millions of RMB");      
+
+
+        // create a tooltip
+        var Tooltip = d3.select("body")
+            .append("div")
+            .style("opacity", 1)
+            .attr("class", "tooltip")
+            .style("background-color", "white")
+            .style("border", "solid")
+            .style("border-width", "2px")
+            .style("border-radius", "5px")
+            .style("padding", "5px")
+            .style("position", "absolute")
+
+
+        // var mouseover = function(d) {
+        //     console.log("moused over")
+        //     console.log(d)
+        //     let city_name = this.classList[1];
+
+        //     d3.selectAll(".line").style("stroke-width", 2)
+        //     d3.selectAll(".line."+city_name).style("stroke-width", 5)
+        //     //console.log(".line."+city_name)
+
+        //     d3.selectAll(".line")
+        //     .style("opacity", 0.2)
+
+        //     d3.selectAll(".line."+city_name)
+        //     .style("opacity", 1)
+
+
+        //     Tooltip
+        //     //.style("opacity", 1)
+        //     .attr("display", "block !important")
+        //     .style("opacity", 1)
+
+        // }
+
+        // var mousemove = function(d) {
+        //     console.log("mouse moving")
+
+        //     console.log(this.classList)
+        //     let city_name = this.classList[1]
+        //     let year = this.classList[2].split("_")[1]
+        //     let costperkm_year = this.classList[3].split("_")[1]
+
+
+        //     Tooltip
+        //     .html("Cumulative Cost/km in a Year of Projects in "
+        //     + city_name + "<br>"
+        //     + "Year: " + year + "<br>Total: ¥" + Math.ceil(costperkm_year) + "mm<br>"
+        //     + "Add breakdown from responsible stations if enough time...<br>")
+        //     .style("left", (d3.pointer(event)[0]-50) + "px")
+        //     .style("top", (d3.pointer(event)[1]+100) + "px")
+        // }
+
+        // var mouseleave = function(d) {
+        //     console.log("mouse left")
+        //     console.log(d)
+        //     let city_name = this.classList[1]
+        //     // console.log(".line."+city_name)
+
+        //     // d3.selectAll(".line."+city_name).style("stroke-width", 2);
+
+        //     Tooltip
+        //     .attr("display", "none !important")
+        //     .style("opacity", 0)
+        //     //.style("display", 0)
+        //     // d3.select(this)
+        //     // .style("stroke", "none")
+        //     // .style("opacity", 0.8)
+        // }
+
+    }
+</script>
+
+</html>

@@ -1,0 +1,11 @@
+﻿e,country,city,line,start_year,end_year,rr,length,tunnel_per,tunnel,stations,source1,cost,currency,year,ppp_rate,real_cost,cost_km_millions,source2,reference
+7640,CN,Beijing,Line 4,2004,2009,0,28.2,95.17%,26.837,24,Media,15300,CNY,2005,0.3517,5381.01,190.82,Media,http://zizhan.mot.gov.cn/zhuantizhuanlan/qita/quanqiuhuanjingjijin/zhishigongxiang/201601/P020160125565596507649.pdf
+7649,CN,Beijing,Line 13,1999,2003,0,40.85,0.00%,0,17,Wikiland,6570,CNY,1999,0.37,2430.9,59.51,Media,http://www.wikiwand.com/zh-sg/%E5%8C%97%E4%BA%AC%E5%9C%B0%E9%93%8113%E5%8F%B7%E7%BA%BF
+7904,CN,Beijing,Line 7 Phase 1,2009,2014,0,23.7,100.00%,23.7,21,Plan,16000,CNY,2014,0.266,4256.45,179.6,Media,http://bj.bendibao.com/news/20141120/171344.shtm
+8112,CN,Beijing,Line 15 Phase 1,2009,2014,0,41.4,66.91%,27.7,18,Media,18100,CNY,2010,0.3004,5437.07,131.33,Media,http://finance.ifeng.com/city/bj/20101117/2902241.shtml
+8139,CN,Beijing,Capital Airport Express,2005,2008,0,28.1,0.00%,0,4,Measured,622.3,CNY,2005,0.3517,218.89,7.79,Media,http://news.sciencenet.cn/sbhtmlnews/2008/8/209799.html
+7794,CN,Beijing,Line 16,2013,2021,0,49.8,100.00%,49.8,29,Media,49500,CNY,2013,0.2729,13509.83,271.28,Media,http://www.bjnews.com.cn/news/2016/11/25/424943.html; https://baijiahao.baidu.com/s?id=1633332748114018963&wfr=spider&for=pc
+8065,CN,Beijing,Line 5,2002,2007,0,27.6,NA,NA,23,Media,12000,CNY,2004,0.3545,4253.81,154.12,Media,http://finance.sina.com.cn/b/20040419/0854725033.shtml
+7960,CN,Beijing,Line 10 North and East,2003,2008,0,24.64,100.00%,24.64,22,Media,13700,CNY,2005,0.3517,4818.85,195.57,Media,http://news.sciencenet.cn/sbhtmlnews/2008/8/209799.html
+7832,CN,Beijing,Line 6 Phase 1 and 2,2008,2014,0,42.85,100.00%,42.85,27,Wiki,32250,CNY,2009,0.3174,10234.85,238.85,Media,https://zh.wikisource.org/zh-hans/%E5%9B%BD%E5%AE%B6%E5%8F%91%E5%B1%95%E6%94%B9%E9%9D%A9%E5%A7%94%E5%85%B3%E4%BA%8E%E5%8C%97%E4%BA%AC%E5%B8%82%E5%9C%B0%E9%93%816%E5%8F%B7%E7%BA%BF%E5%B7%A5%E7%A8%8B%E5%8F%AF%E8%A1%8C%E6%80%A7%E7%A0%94%E7%A9%B6%E6%8A%A5%E5%91%8A%E7%9A%84%E6%89%B9%E5%A4%8D
+8041,CN,Beijing,Daxing Line,2007,2010,0,21.8,80.28%,17.5,11,Media,10930,CNY,2007,0.3323,3632.44,166.63,Media,http://www.mtr.bj.cn/article/5d510c0aebb1a36f5ef5981f.html

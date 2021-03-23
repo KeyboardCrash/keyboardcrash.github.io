@@ -1,0 +1,26 @@
+/* 
+h2 {
+    text-align: center;
+    z-index: 3000;
+} */
+
+.line {
+    fill: none;
+    stroke: steelblue;
+    stroke-width: 2px;
+  }
+
+#title {
+    text-align: center;
+}
+
+svg {
+    margin: auto;
+    display: block;
+}
+
+path{
+    fill:none;
+    stroke:black;
+    pointer-events:all;
+}
