@@ -4,14 +4,30 @@ h2 {
     z-index: 3000;
 } */
 
+h5 {
+    text-align: center;
+}
+
 .line {
     fill: none;
     stroke: steelblue;
     stroke-width: 2px;
-  }
+}
+
+span {
+    padding-left: 75px;
+}
 
 #title {
     text-align: center;
+}
+
+#barlegend {
+    position: absolute;
+    left: 75px;
+    top: 80px;
+    border-width: 1px;
+    border-radius: 5px;
 }
 
 #exitbutton {
@@ -30,7 +46,8 @@ body {
 
 svg {
     display: block;
-    margin-left: 50px;
+    margin-left: 10px;
+    overflow: auto;
 }
 
 path{

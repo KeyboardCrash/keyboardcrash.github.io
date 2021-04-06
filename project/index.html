@@ -25,10 +25,12 @@
             <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="#">upgrade your browser</a> to improve your experience.</p>
         <![endif]-->
     <h2 id="title">Projected vs Real cost of transit project</h2>
-    <select id="selectButton"></select>
-    <select id="graphType"></select>
-    <div id="svg-container">
-    </div>
+    <h5 id="subtitle">Click on bar or point for detailed view</h4>
+        <select id="selectButton"></select>
+        <select id="graphType"></select>
+        <div id="barlegend"></div>
+        <div id="svg-container">
+        </div>
 
 </body>
 
@@ -117,11 +119,29 @@
             .attr("value", function (d) {
                 return d;
             }) // corresponding value returned by the button
+        var colorArray = ['#FF6633', '#FFB399', '#FF33FF', '#FFFF99', '#00B3E6',
+            '#E6B333', '#3366E6', '#999966', '#99FF99', '#B34D4D',
+            '#80B300', '#809900', '#E6B3B3', '#6680B3', '#66991A',
+            '#FF99E6', '#CCFF1A', '#FF1A66', '#E6331A', '#33FFCC',
+            '#66994D', '#B366CC', '#4D8000', '#B33300', '#CC80CC',
+            '#66664D', '#991AFF', '#E666FF', '#4DB3FF', '#1AB399',
+            '#E666B3', '#33991A', '#CC9999', '#B3B31A', '#00E680',
+            '#4D8066', '#809980', '#E6FF80', '#1AFF33', '#999933',
+            '#FF3380', '#CCCC00', '#66E64D', '#4D80CC', '#9900B3',
+            '#E64D66', '#4DB380', '#FF4D4D', '#99E6E6', '#6666FF'
+        ];
 
+        var barlegend = d3.select("#barlegend")
+            .append("svg")
+            .attr("width", "200px")
+            .attr("height", "100px")
+            .style("padding", "10px")
+            .style("padding-top", "10px")
+            .style("padding-bottom", "20px")
 
         var myColor = d3.scaleOrdinal()
             .domain(keys)
-            .range(d3.schemeSet2);
+            .range(colorArray);
 
         function drawBasedOnSelection(d) {
             let cityselect = d3.select("#selectButton");
@@ -151,7 +171,14 @@
                 d3.selectAll("circle").remove();
                 d3.selectAll(".tick").remove();
 
-                d3.select(".x_axis").text("Transit Line Name");
+                drawBarLegend();
+
+                d3.select(".x_axis")
+                    .text("Transit Line Name")
+                    .attr("transform",
+                        "translate(" + (width / 2) + " ," +
+                        (height + margin.bottom) + ")");
+
                 d3.select("#title").text("Projected vs Real cost of transit project")
 
                 x = d3.scaleBand()
@@ -190,9 +217,15 @@
                 d3.selectAll("path").remove();
                 d3.selectAll("circle").remove();
                 d3.selectAll(".tick").remove();
+                d3.selectAll("text").remove();
 
-                d3.select(".x_axis").text("Year");
-                d3.select("#title").text("Cumulative Cost of Project spread over its active years")
+                d3.select(".x_axis")
+                    .text("Year")
+                    .attr("transform",
+                        "translate(" + (width / 2) + " ," +
+                        (height + margin.bottom - 200) + ")");;
+
+                d3.select("#title").text("Cumulative Cost of Project spread over active years")
 
 
                 var valueline = d3.line()
@@ -205,6 +238,48 @@
                     });
 
                 function plotPoints(city_name) {
+                    var mouseoverpoint = function (d) {
+                        console.log("moused over")
+                        console.log(d)
+                        let city_name = this.classList[1];
+
+                        hoverTooltip
+                            //.style("opacity", 1)
+                            .attr("display", "block !important")
+                            .style("opacity", 1)
+
+                    }
+
+                    var mousemovepoint = function (d) {
+                        console.log("mouse moving")
+
+                        let obj = d.target.__data__;
+                        console.log(obj)
+
+                        let year = obj.year;
+                        let costperkm_year = obj.costperkm_year;
+
+
+                        hoverTooltip
+                            .html("Cumulative Cost/km: ¥" + Math.floor(costperkm_year) + "mm<br>")
+                            .style("left", (d3.pointer(event)[0] - 50) + "px")
+                            .style("top", (d3.pointer(event)[1] + 50) + "px")
+                    }
+
+                    var mouseleavepoint = function (d) {
+                        console.log("mouse left")
+                        console.log(d)
+                        let city_name = this.classList[1]
+
+
+                        hoverTooltip
+                            .attr("display", "none !important")
+                            .style("opacity", 0)
+                        //.style("display", 0)
+                        // d3.select(this)
+                        // .style("stroke", "none")
+                        // .style("opacity", 0.8)
+                    }
                     let citypoints = svg.selectAll("dot")
                         .data(buildYearCost(city_name))
                         .enter().append("circle")
@@ -218,6 +293,9 @@
                         .attr("stroke-width", "5")
                         .attr("stroke", "black")
                         .on("click", circleTooltip)
+                        .on("mouseover", mouseoverpoint)
+                        .on("mousemove", mousemovepoint)
+                        .on("mouseleave", mouseleavepoint)
 
 
                     citypoints.attr("class", "pin " + city_name);
@@ -245,20 +323,12 @@
                         console.log(lines);
 
                         let markup = "";
-                        for (line in lines) {
-                            if (line.includes("cumulative")) {
-                                continue;
-                            }
-                            console.log(line)
-                            let builder = `${line} : ¥${Math.ceil(lines[line])}mm<br>`
-                            markup += builder;
-                        }
 
                         Tooltip
                             .html("<center>Cumulative Cost/km in a Year of Projects in " +
                                 city_name + "</center>" +
                                 "<center>Year: " + year + "</center><br>" +
-                                markup +
+                                "<div id='legend'></div>" +
                                 "<div id='breakdown'></div>" +
                                 "<br>Total: ¥" + Math.ceil(costperkm_year) + "mm<br>"
                             )
@@ -306,7 +376,7 @@
 
                         let projectsarr = Object.keys(lines)
 
-                        var myColor = d3.scaleOrdinal(d3.schemeCategory10).domain(projectsarr)
+                        var myColor = d3.scaleOrdinal(colorArray).domain(projectsarr)
 
                         for (line in lines) {
                             if (line === 'cumulative') {
@@ -321,7 +391,7 @@
                             key.append("rect")
                                 .attr("height", "20")
                                 .attr("transform", "translate(" + cumulativeoffset + ",10)")
-                                .style("fill", lines => myColor(line) )
+                                .style("fill", lines => myColor(line))
                                 .style('stroke', 'black')
                                 .style('stroke-width', '1')
                                 .transition("linear")
@@ -332,28 +402,79 @@
 
                         }
 
-                        // key.append("rect")
-                        //     .attr("height", 5)
-                        //     .attr("transform", "translate(" + start_offset_px + ",10)")
-                        //     .attr('stroke', 'red')
-                        //     .attr("fill", "red")
-                        //     .attr('stroke-width', '2')
-                        //     .transition("linear")
-                        //     .duration(1000)
-                        //     .attr("width", newSize)
+                        // ===== Color legend =====
+
+                        var offsetx = 20;
+                        var offsety = 20;
+                        var linecount = 0;
+                        var leg = d3.select("#legend")
+                            .append("svg")
+                            .attr("width", "580px")
+                            .attr("height", "300px")
+                            .style("top", 20)
+                            .style("left", 0)
+                            .style("padding", "10px")
+                            .style("padding-top", "10px")
+                            .style("padding-bottom", "20px")
+
+                        for (line in lines) {
+                            if (line.includes("cumulative")) {
+                                continue;
+                            }
+                            console.log(line)
+                            if (linecount >= 8) {
+                                offsetx += 260;
+                                offsety = 20;
+                                linecount = 0;
+                            }
+                            let overflow = line.split(" ")
+                            if (overflow.length > 4) {
+                                let newstr = "";
+
+                                for (let i = 0; i <= 3; i++) {
+                                    newstr += overflow[i] + " "
+                                }
+                                let newstr2 = "";
+                                for (let i = 4; i <= overflow.length - 1; i++) {
+                                    newstr2 += overflow[i] + " "
+                                }
+                                leg.append("circle").attr("cx", offsetx).attr("cy", offsety).attr("r", 10).style("fill",
+                                    myColor(line))
+                                leg.append("text").attr("x", offsetx + 20).attr("y", offsety).text(newstr).style(
+                                    "font-size", "15px").attr("alignment-baseline", "middle")
+                                offsety += 20;
+                                if (newstr !== "") {
+                                    leg.append("text").attr("x", offsetx + 20).attr("y", offsety).text(newstr2).style(
+                                        "font-size", "15px").attr("alignment-baseline", "middle")
+                                    offsety += 20;
+                                }
+
+                            } else {
+                                leg.append("circle").attr("cx", offsetx).attr("cy", offsety).attr("r", 10).style("fill",
+                                    myColor(line))
+                                leg.append("text").attr("x", offsetx + 20).attr("y", offsety).text(line.substr(0, 30))
+                                    .style("font-size", "15px").attr("alignment-baseline", "middle")
+                                offsety += 30;
+                            }
+
+                            linecount++;
+                        }
+
+
+
 
                         key.append("g")
                             .attr("class", "x axis")
-                            .attr("transform", "translate("+(500/2 - 70)+",70)")
+                            .attr("transform", "translate(" + (500 / 2 - 50) + ",70)")
                             .append("text")
                             .text("Breakdown of Cost");
 
                         key.append("g")
-                        .attr("class", "x axis")
-                        .attr("transform", "translate("+(500/2 - 115)+",80)")
-                        .append("text")
-                        .text("Blocks rendered sequentially by list order")
-                        .style("font-size", "12");
+                            .attr("class", "x axis")
+                            .attr("transform", "translate(" + (500 / 2 - 95) + ",85)")
+                            .append("text")
+                            .text("Blocks rendered sequentially by list order")
+                            .style("font-size", "12px");
 
                         key.append("g")
                             .attr("class", "x axis")
@@ -365,7 +486,7 @@
                             .attr("class", "x axis")
                             .attr("transform", "translate(450,45)")
                             .append("text")
-                            .text("¥"+lines.cumulative+"mm");
+                            .text("¥" + Math.floor(lines.cumulative) + "mm");
                     }
                 }
 
@@ -373,7 +494,7 @@
                     const cityEnum = {
                         "Beijing": "red",
                         "Shenzhen": "blue",
-                        "Guangzhou": "black",
+                        "Guangzhou": "purple",
                         "Shanghai": "green",
                         "Wuhan": "orange"
                     }
@@ -621,58 +742,76 @@
             return d.cost;
         })]);
 
+        function drawBarLegend() {
+            barlegend.selectAll("circle").remove();
+            barlegend.selectAll("text").remove();
+
+            barlegend.append("circle").attr("cx", "75").attr("cy", "50").attr("r", 10).style("fill", "#003f5c")
+            barlegend.append("text").attr("x", "100").attr("y", "50").text("Projected Cost").style("font-size", "15px")
+                .attr("alignment-baseline", "middle")
+
+            barlegend.append("circle").attr("cx", "75").attr("cy", "80").attr("r", 10).style("fill", "#ff6361")
+            barlegend.append("text").attr("x", "100").attr("y", "80").text("Real Cost").style("font-size", "15px").attr(
+                "alignment-baseline", "middle")
+        }
+
         function drawBars(data) {
 
-            // var mouseover = function (d) {
-            //     console.log("moused over")
-            //     console.log(d)
+            var mouseover = function (d) {
+                console.log("moused over")
+                console.log(d)
 
-            //     Tooltip
-            //         //.style("opacity", 1)
-            //         .attr("display", "block !important")
-            //         .style("opacity", 1)
+                hoverTooltip
+                    //.style("opacity", 1)
+                    .attr("display", "block !important")
+                    .style("opacity", 1)
 
-            // }
+            }
 
-            // var mousemove = function (d) {
-            //     console.log("mouse moving")
-            //     let rectdata = d3.select(this)._groups[0][0].__data__;
-            //     console.log(rectdata)
-            //     //console.log(projectByCity[selection])
-            //     let project_name = rectdata.line
-            //     let start_year = rectdata.start_year
-            //     let finish_year = rectdata.finish_year
-            //     let cost = rectdata.cost
-            //     let real_cost = rectdata.real_cost
+            var mousemove = function (d) {
+                console.log("mouse moving")
+                let rectdata = d3.select(this)._groups[0][0].__data__;
+                console.log(rectdata)
+                //console.log(projectByCity[selection])
+                let project_name = rectdata.line
+                let start_year = rectdata.start_year
+                let finish_year = rectdata.finish_year
+                let cost = rectdata.cost
+                let real_cost = rectdata.real_cost
 
-
-            //     Tooltip
-            //         .html(
-            //             `
-            //             Project Name: ${project_name}<br>
-            //             Start Year: ${start_year}<br>
-            //             End Year: ${finish_year}<br>
-            //             Projected Cost: ¥${Math.floor(cost)}mm<br>
-            //             Actual Cost: ¥${Math.floor(real_cost)}mm<br>
-            //             Amount Overestimated: ¥${Math.floor(cost - real_cost)}mm<br>
-            //             Percentage of cost used: ${Math.floor(real_cost/cost * 100)}%<br>
-            //             `
-
-
-            //         )
-            //         .style("left", (d3.pointer(event)[0] + 250) + "px")
-            //         .style("top", (d3.pointer(event)[1] - 90) + "px")
-            // }
-
-            // var mouseleave = function (d) {
-            //     console.log("mouse left")
-            //     console.log(d)
+                if ((this.classList.value).includes("projected")) {
+                    hoverTooltip
+                        .html(
+                            `
+                        Projected Cost: ¥${Math.floor(cost)}mm<br>
+                        `
+                        )
+                        .style("left", (d3.pointer(event)[0] + 50) + "px")
+                        .style("top", (d3.pointer(event)[1] + 50) + "px")
+                } else {
+                    hoverTooltip
+                        .html(
+                            `
+                        Actual Cost: ¥${Math.floor(real_cost)}mm<br>
+                        `
+                        )
+                        .style("left", (d3.pointer(event)[0] + 50) + "px")
+                        .style("top", (d3.pointer(event)[1] + 50) + "px")
+                }
 
 
-            //     Tooltip
-            //         .attr("display", "none !important")
-            //         .style("opacity", 0)
-            // }
+
+            }
+
+            var mouseleave = function (d) {
+                console.log("mouse left")
+                console.log(d)
+
+
+                hoverTooltip
+                    .attr("display", "none !important")
+                    .style("opacity", 0)
+            }
 
             var mouseclick = function (d) {
                 console.log("mouse click detected")
@@ -711,7 +850,7 @@
                         Projected Cost: ¥${Math.floor(cost)}mm<br>
                         Actual Cost: ¥${Math.floor(real_cost)}mm<br>
                         Amount Overestimated: ¥${Math.floor(cost - real_cost)}mm<br>
-                        Percentage of cost used: ${Math.floor(real_cost/cost * 100)}%<br>
+                        Percentage of projected cost used: ${Math.floor(real_cost/cost * 100)}%<br>
                         
                         <br><br>
 
@@ -781,19 +920,19 @@
                     .attr("width", newSize)
 
                 key.append("g")
-                .attr("class", "x axis")
-                .attr("transform", "translate("+(start_offset_px-15)+",15)")
-                .append("text")
-                .text(start_year)
-                .style("font-size", 8)
+                    .attr("class", "x axis")
+                    .attr("transform", "translate(" + (start_offset_px - 15) + ",15)")
+                    .append("text")
+                    .text(start_year)
+                    .style("font-size", "8px")
 
 
                 key.append("g")
-                .attr("class", "x axis")
-                .attr("transform", "translate("+(start_offset_px+newSize-15)+",15)")
-                .append("text")
-                .text(end_year)
-                .style("font-size", 8)
+                    .attr("class", "x axis")
+                    .attr("transform", "translate(" + (start_offset_px + newSize - 15) + ",15)")
+                    .append("text")
+                    .text(end_year)
+                    .style("font-size", "8px")
 
                 key.append("g")
                     .attr("class", "x axis")
@@ -812,7 +951,7 @@
                 var stationline = d3.select("#stationLine")
                     .append("svg")
                     .attr("width", 550)
-                    .attr("height", 100)
+                    .attr("height", 120)
                     .style("top", 70)
                     .style("left", 100)
                     .style("padding", "10px")
@@ -861,7 +1000,15 @@
                         95 + ")")
                     .style("text-anchor", "middle")
                     .text("Red indicates current station selected")
-                    .style("font-size", "12");
+                    .style("font-size", "12px");
+
+                stationline.append("text")
+                    .attr("transform",
+                        "translate(" + 550 / 2 + " ," +
+                        110 + ")")
+                    .style("text-anchor", "middle")
+                    .text("Darker shades indicate greater density of projects with this station count")
+                    .style("font-size", "12px");
 
                 let offset = 500 / maxStations;
 
@@ -904,7 +1051,7 @@
                             40 + ")")
                         .style("text-anchor", "middle")
                         .text(i)
-                        .style("font-size", 8)
+                        .style("font-size", "8px")
                 }
 
             }
@@ -914,11 +1061,11 @@
                 .data(projectByCity[cityselection])
                 .enter()
                 .append("rect")
-                // .on("mouseover", mouseover)
-                // .on("mousemove", mousemove)
-                // .on("mouseleave", mouseleave)
+                .on("mouseover", mouseover)
+                .on("mousemove", mousemove)
+                .on("mouseleave", mouseleave)
                 .on("click", mouseclick)
-                .classed("cost", true)
+                .attr("class", "cost projected")
                 .attr("fill", "#003f5c")
                 .attr("width", x.bandwidth())
                 .attr("x", function (d, i) {
@@ -945,11 +1092,11 @@
                 .data(projectByCity[cityselection])
                 .enter()
                 .append("rect")
-                // .on("mouseover", mouseover)
-                // .on("mousemove", mousemove)
-                // .on("mouseleave", mouseleave)
+                .on("mouseover", mouseover)
+                .on("mousemove", mousemove)
+                .on("mouseleave", mouseleave)
                 .on("click", mouseclick)
-                .classed("real_cost", true)
+                .attr("class", "cost real")
                 .attr("fill", "#ff6361")
                 .attr("width", x.bandwidth())
                 .attr("x", function (d, i) {
@@ -978,6 +1125,7 @@
         // starting bar
         // selection by default is at 0, beijing typically loaded
         drawBars(projectByCity[cityselection]);
+        drawBarLegend();
 
 
         // Add the X Axis
@@ -1027,8 +1175,20 @@
             .style("border-radius", "5px")
             .style("padding", "5px")
             .style("position", "absolute")
-            .style("width", "600px")
-            .style("height", "500px")
+            .style("width", "640px")
+            .style("height", "600px")
+
+        var hoverTooltip = d3.select("body")
+            .append("div")
+            .style("opacity", 0)
+            .attr("class", "tooltip")
+            .style("background-color", "white")
+            .style("border", "solid")
+            .style("border-width", "2px")
+            .style("border-radius", "5px")
+            .style("padding", "5px")
+            .style("position", "absolute")
+            .style("font-size", "16px")
 
         var exitButton = d3.select("body")
             .append("div")
@@ -1043,64 +1203,6 @@
             .style("opacity", 0)
             .on("click", hideTooltip)
 
-
-        // var mouseover = function(d) {
-        //     console.log("moused over")
-        //     console.log(d)
-        //     let city_name = this.classList[1];
-
-        //     d3.selectAll(".line").style("stroke-width", 2)
-        //     d3.selectAll(".line."+city_name).style("stroke-width", 5)
-        //     //console.log(".line."+city_name)
-
-        //     d3.selectAll(".line")
-        //     .style("opacity", 0.2)
-
-        //     d3.selectAll(".line."+city_name)
-        //     .style("opacity", 1)
-
-
-        //     Tooltip
-        //     //.style("opacity", 1)
-        //     .attr("display", "block !important")
-        //     .style("opacity", 1)
-
-        // }
-
-        // var mousemove = function(d) {
-        //     console.log("mouse moving")
-
-        //     console.log(this.classList)
-        //     let city_name = this.classList[1]
-        //     let year = this.classList[2].split("_")[1]
-        //     let costperkm_year = this.classList[3].split("_")[1]
-
-
-        //     Tooltip
-        //     .html("Cumulative Cost/km in a Year of Projects in "
-        //     + city_name + "<br>"
-        //     + "Year: " + year + "<br>Total: ¥" + Math.ceil(costperkm_year) + "mm<br>"
-        //     + "Add breakdown from responsible stations if enough time...<br>")
-        //     .style("left", (d3.pointer(event)[0]-50) + "px")
-        //     .style("top", (d3.pointer(event)[1]+100) + "px")
-        // }
-
-        // var mouseleave = function(d) {
-        //     console.log("mouse left")
-        //     console.log(d)
-        //     let city_name = this.classList[1]
-        //     // console.log(".line."+city_name)
-
-        //     // d3.selectAll(".line."+city_name).style("stroke-width", 2);
-
-        //     Tooltip
-        //     .attr("display", "none !important")
-        //     .style("opacity", 0)
-        //     //.style("display", 0)
-        //     // d3.select(this)
-        //     // .style("stroke", "none")
-        //     // .style("opacity", 0.8)
-        // }
 
     }
 </script>
