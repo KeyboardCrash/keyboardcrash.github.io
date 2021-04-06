@@ -356,13 +356,13 @@
                             .attr("class", "x axis")
                             .attr("transform", "translate(0,45)")
                             .append("text")
-                            .text("0 dolla");
+                            .text("¥0mm");
 
                         key.append("g")
                             .attr("class", "x axis")
                             .attr("transform", "translate(450,45)")
                             .append("text")
-                            .text("all the mora");
+                            .text("¥"+lines.cumulative+"mm");
                     }
                 }
 
@@ -731,11 +731,11 @@
                 //===== Year Line ======
                 var key = d3.select("#yearLine")
                     .append("svg")
-                    .attr("width", "550px")
-                    .attr("height", "70px")
+                    .attr("width", "600px")
+                    .attr("height", "100px")
                     .style("top", 70)
-                    .style("left", 100)
-                    .style("padding", "10px")
+                    .style("left", 50)
+                    .style("padding", "20px")
                     .style("padding-top", "40px")
                     .style("padding-bottom", "20px")
 
@@ -817,7 +817,7 @@
                     .style("padding-bottom", "20px")
 
                 stationline.append("rect")
-                    .attr("height", 2)
+                    .attr("height", 1)
                     .attr("transform", "translate(0,10)")
                     .attr('stroke', 'black')
                     .attr('stroke-width', '2')
@@ -880,6 +880,7 @@
                             .transition("linear")
                             .duration(1000)
                             .attr("height", 25)
+                            .style("opacity", 0.6)
                     } else {
                         stationline.append("rect")
                             .attr("width", 1)
@@ -887,6 +888,7 @@
                             .attr('stroke', 'black')
                             .attr('stroke-width', '1')
                             .attr("height", 20)
+                            .style("opacity", 0.2)
 
                     }
                 }
