@@ -39,6 +39,11 @@ span {
     top: 0;
 }
 
+.divider{
+    border-top: 2px solid black;
+    border-radius: 4px;
+}
+
 body {
     font-family: 'Open Sans', sans-serif;
     background-color: #88bdbc;
