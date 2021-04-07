@@ -26,7 +26,9 @@
         <![endif]-->
     <h2 id="title">Projected vs Real cost of transit project</h2>
     <h5 id="subtitle">Click on bar or point for detailed view</h4>
+        <div id="selectLabel"></div>
         <select id="selectButton"></select>
+        <div id="graphTypeLabel"></div>
         <select id="graphType"></select>
         <div id="barlegend"></div>
         <div id="svg-container">
@@ -1242,6 +1244,19 @@
             .style("top", (95) + "px")
             .style("opacity", 0)
             .on("click", hideTooltip)
+        
+        var selectLabel = d3.select("#selectLabel")
+            .html("<span>City</span>")
+            .style("position", "absolute")
+            .style("left", "25px")
+            .style("top", "25px")
+
+        var graphTypeLabel = d3.select("#graphTypeLabel")
+        .html("<span>Graph Type</span>")
+        .style("position", "absolute")
+        .style("left", "125px")
+        .style("top", "25px")    
+
     }
 </script>
 
