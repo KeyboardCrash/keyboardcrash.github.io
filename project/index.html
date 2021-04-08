@@ -659,16 +659,17 @@
 
                 // find the max val to set the range of the graph
                 var maxYearlyCost = 0;
-                for (city in yearlyCost) {
-                    if (city !== undefined) {
-                        buildYearCost(city)
-                    }
-                }
+                // for (city in yearlyCost) {
+                //     if (city !== undefined) {
+                //         buildYearCost(city)
+                //     }
+                // }
+                buildYearCost(cityselection);
 
-                let earliest_year = d3.min(data, function (d) {
+                let earliest_year = d3.min(projectByCity[cityselection], function (d) {
                     return d.start_year
                 });
-                let last_year = d3.max(data, function (d) {
+                let last_year = d3.max(projectByCity[cityselection], function (d) {
                     return d.end_year
                 });
 
@@ -683,9 +684,7 @@
                 })]);
 
                 // Modify this max if needed
-                y.domain([0, d3.max(projectByCity[cityselection], function (d) {
-                    return Math.max(d.cost_km_millions, maxYearlyCost);
-                })]);
+                y.domain([0, (maxYearlyCost)]);
 
                 // Add the X Axis
                 svg.append("g")
