@@ -445,14 +445,38 @@
 
                             key.append("rect")
                                 .attr("height", "20")
+                                .data([lines[line]])
+
                                 .attr("transform", "translate(" + cumulativeoffset + ",10)")
                                 .style("fill", lines => myColor(line))
                                 .style('stroke', 'black')
                                 .style('stroke-width', '1')
+                                .on("mouseover", function(d){
+                                    console.log("in")
+                                    hoverTooltip
+                                        .style("display", "block")
+                                        .style("opacity", 1)
+
+                                })
+                                .on("mousemove", function(d){
+                                    console.log("moving")
+                                    let cumulative = d.target.__data__;
+                                    hoverTooltip
+                                    .html("Cumulative Cost/km: ¥" + cumulative + "mm")
+                                    .style("left", (1350) + "px")
+                                    .style("top", (550) + "px")
+                                })
+                                .on("mouseleave", function(d){
+                                    console.log("out")
+                                    hoverTooltip
+                                        .style("display", "none")
+                                        .style("opacity", 0)
+                                })
                                 .transition("linear")
                                 .duration(1000)
                                 .attr("width", size)
-
+                            
+                                
                             cumulativeoffset += size;
 
                         }
