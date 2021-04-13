@@ -290,7 +290,7 @@
                         console.log("moused over")
                         console.log(d)
                         let city_name = this.classList[1];
-                        d3.select(this).style("cursor", "pointer"); 
+                        d3.select(this).style("cursor", "pointer").attr("r", 5); 
 
                         hoverTooltip
                             //.style("opacity", 1)
@@ -319,7 +319,7 @@
                         console.log("mouse left")
                         console.log(d)
                         let city_name = this.classList[1]
-                        d3.select(this).style("cursor", "default"); 
+                        d3.select(this).style("cursor", "default").attr("r", 3); 
 
 
                         hoverTooltip
@@ -839,6 +839,8 @@
                 console.log("moused over")
                 console.log(d)
                 d3.select(this).style("cursor", "pointer"); 
+                d3.select(this).style("outline", "thin solid black").style("outline-width", "3px");
+
 
                 hoverTooltip
                     //.style("opacity", 1)
@@ -888,6 +890,7 @@
                 console.log("mouse left")
                 console.log(d)
                 d3.select(this).style("cursor", "default"); 
+                d3.select(this).style("outline", "none");
 
 
                 hoverTooltip
