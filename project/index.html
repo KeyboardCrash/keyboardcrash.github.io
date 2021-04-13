@@ -453,10 +453,12 @@
                                 .style('stroke-width', '1')
                                 .on("mouseover", function(d){
                                     console.log("in")
+                                    d3.select(this)
+                                    .style("outline", "thin solid black")
+                                    .style("outline-width", "2px");
                                     hoverTooltip
                                         .style("display", "block")
                                         .style("opacity", 1)
-
                                 })
                                 .on("mousemove", function(d){
                                     console.log("moving")
@@ -468,6 +470,8 @@
                                 })
                                 .on("mouseleave", function(d){
                                     console.log("out")
+                                    d3.select(this)
+                                    .style("outline","none");
                                     hoverTooltip
                                         .style("display", "none")
                                         .style("opacity", 0)
